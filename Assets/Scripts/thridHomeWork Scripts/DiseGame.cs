@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +10,6 @@ public class DiceGame : MonoBehaviour
     [SerializeField] private int diceCount = 2;
     [SerializeField] private float throwForceMin = 5f;
     [SerializeField] private float throwForceMax = 10f;
-    [SerializeField] private float throwHeight = 3f;
     
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI statusText;
@@ -19,8 +17,8 @@ public class DiceGame : MonoBehaviour
     [Header("Ссылки")]
     [SerializeField] private InputHandler inputHandler;
     [SerializeField] private ScoreCalculator scoreCalculator;
-    
-    private List<GameObject> diceList = new List<GameObject>();
+
+    private List<Dice> diceList = new List<Dice>();
     private bool isDiceRolling = false;
     private Vector3 throwPosition;
     
@@ -39,25 +37,22 @@ public class DiceGame : MonoBehaviour
     
     void SetStatusText(string text)
     {
-        if (statusText != null)
-        {
-            statusText.text = text;
-        }
+        if (statusText != null) statusText.text = text;
     }
     
     void CreateDice()
     {
         foreach (var dice in diceList)
         {
-            Destroy(dice);
+            Destroy(dice.gameObject);
         }
         diceList.Clear();
         
         for (int i = 0; i < diceCount; i++)
         {
-            GameObject dice = Instantiate(dicePrefab, throwPosition, Quaternion.identity);
-            dice.AddComponent<DicePhysics>();
-            diceList.Add(dice);
+            GameObject diceObj = Instantiate(dicePrefab, throwPosition, Quaternion.identity);
+            Dice diceComponent = diceObj.GetComponent<Dice>();
+            diceList.Add(diceComponent);
         }
         
         scoreCalculator.SetDiceList(diceList);
@@ -74,24 +69,24 @@ public class DiceGame : MonoBehaviour
         {
             dice.transform.position = throwPosition;
             dice.transform.rotation = Quaternion.identity;
-            dice.GetComponent<Rigidbody>().isKinematic = false;
-            
+
+            dice.Rb.isKinematic = false;
+
             float force = UnityEngine.Random.Range(throwForceMin, throwForceMax);
             Vector3 throwDirection = new Vector3(
                 UnityEngine.Random.Range(-1f, 1f),
                 1f,
                 UnityEngine.Random.Range(-1f, 1f)
             ).normalized;
-            
-            Rigidbody rb = dice.GetComponent<Rigidbody>();
-            rb.AddForce(throwDirection * force, ForceMode.Impulse);
+
+            dice.Rb.AddForce(throwDirection * force, ForceMode.Impulse);
             
             Vector3 randomRotation = new Vector3(
                 UnityEngine.Random.Range(100f, 500f),
                 UnityEngine.Random.Range(100f, 500f),
                 UnityEngine.Random.Range(100f, 500f)
             );
-            rb.AddTorque(randomRotation, ForceMode.Impulse);
+            dice.Rb.AddTorque(randomRotation, ForceMode.Impulse);
         }
         
         StartCoroutine(CheckDiceStopped());
@@ -100,7 +95,6 @@ public class DiceGame : MonoBehaviour
     IEnumerator CheckDiceStopped()
     {
         yield return new WaitForSeconds(1f);
-        
         int stableFrames = 0;
         
         while (stableFrames < StableFramesRequired)
@@ -109,22 +103,16 @@ public class DiceGame : MonoBehaviour
             
             foreach (var dice in diceList)
             {
-                Rigidbody rb = dice.GetComponent<Rigidbody>();
-                if (rb.linearVelocity.magnitude > VelocityThreshold || 
-                    rb.angularVelocity.magnitude > AngularVelocityThreshold)
+                if (dice.Rb.linearVelocity.magnitude > VelocityThreshold || 
+                    dice.Rb.angularVelocity.magnitude > AngularVelocityThreshold)
                 {
                     allStopped = false;
                     break;
                 }
             }
             
-            if (allStopped)
-            {
-                stableFrames++;
-            }
-            else
-            {
-                stableFrames = 0;
+            if (allStopped) stableFrames++;
+            else stableFrames = 0;
             
             yield return new WaitForSeconds(0.05f);
         }
@@ -132,12 +120,10 @@ public class DiceGame : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         
         scoreCalculator.CalculateScore();
-        
         int score = scoreCalculator.GetLastScore();
         SetStatusText($"Счёт: {score}");
         
         isDiceRolling = false;
-        }   
     }
     
     void OnDestroy()

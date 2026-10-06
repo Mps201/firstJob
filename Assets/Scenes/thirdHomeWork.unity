@@ -153,7 +153,6 @@ MonoBehaviour:
   diceCount: 1
   throwForceMin: 1
   throwForceMax: 2
-  throwHeight: 3
   statusText: {fileID: 1892156090}
   inputHandler: {fileID: 425057599}
   scoreCalculator: {fileID: 1766689221}
