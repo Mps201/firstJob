@@ -1,23 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class DiceGame : MonoBehaviour
 {
     [Header("Настройки кубиков")]
-    [SerializeField] private GameObject dicePrefab;
-    [SerializeField] private int diceCount = 2;
+    [SerializeField] private Dice dicePrefab;
     [SerializeField] private float throwForceMin = 5f;
     [SerializeField] private float throwForceMax = 10f;
-    
-    [Header("UI")]
-    [SerializeField] private TextMeshProUGUI statusText;
     
     [Header("Ссылки")]
     [SerializeField] private InputHandler inputHandler;
     [SerializeField] private ScoreCalculator scoreCalculator;
-
+    [SerializeField] private GameModel gameModel;
+    [SerializeField] private GameUI gameUI;
+    
     private List<Dice> diceList = new List<Dice>();
     private bool isDiceRolling = false;
     private Vector3 throwPosition;
@@ -30,17 +27,26 @@ public class DiceGame : MonoBehaviour
     {
         throwPosition = transform.position;
         inputHandler.OnDiceThrowPressed += ThrowDice;
-        
-        SetStatusText("Нажми Space для броска");
-        CreateDice();
+
+        StartNewRound(2);
     }
-    
-    void SetStatusText(string text)
+
+    public void StartNewRound(int diceCount)
     {
-        if (statusText != null) statusText.text = text;
+        if (isDiceRolling) return;
+        
+        gameModel.GenerateTarget(diceCount);
+        
+        if (gameUI != null)
+        {
+            gameUI.UpdateTargetDisplay(gameModel.Target);
+        }
+
+        CreateDice(diceCount);
+        ThrowDice();
     }
     
-    void CreateDice()
+    void CreateDice(int diceCount)
     {
         foreach (var dice in diceList)
         {
@@ -50,9 +56,8 @@ public class DiceGame : MonoBehaviour
         
         for (int i = 0; i < diceCount; i++)
         {
-            GameObject diceObj = Instantiate(dicePrefab, throwPosition, Quaternion.identity);
-            Dice diceComponent = diceObj.GetComponent<Dice>();
-            diceList.Add(diceComponent);
+            Dice diceInstance = Instantiate(dicePrefab, throwPosition, Quaternion.identity);
+            diceList.Add(diceInstance);
         }
         
         scoreCalculator.SetDiceList(diceList);
@@ -63,22 +68,26 @@ public class DiceGame : MonoBehaviour
         if (isDiceRolling) return;
         
         isDiceRolling = true;
-        SetStatusText("Rolling...");
+        gameModel.ResetResult();
+        
+        if (gameUI != null)
+        {
+            gameUI.UpdateResultDisplay("Бросаем...");
+        }
         
         foreach (var dice in diceList)
         {
             dice.transform.position = throwPosition;
             dice.transform.rotation = Quaternion.identity;
-
             dice.Rb.isKinematic = false;
-
+            
             float force = UnityEngine.Random.Range(throwForceMin, throwForceMax);
             Vector3 throwDirection = new Vector3(
                 UnityEngine.Random.Range(-1f, 1f),
                 1f,
                 UnityEngine.Random.Range(-1f, 1f)
             ).normalized;
-
+            
             dice.Rb.AddForce(throwDirection * force, ForceMode.Impulse);
             
             Vector3 randomRotation = new Vector3(
@@ -121,7 +130,31 @@ public class DiceGame : MonoBehaviour
         
         scoreCalculator.CalculateScore();
         int score = scoreCalculator.GetLastScore();
-        SetStatusText($"Счёт: {score}");
+        
+        gameModel.DetermineResult(score);
+        
+        if (gameUI != null)
+        {
+            gameUI.UpdateScoreDisplay(score);
+            
+            string resultText = "";
+            switch (gameModel.CurrentResult)
+            {
+                case GameModel.GameResult.Win:
+                    resultText = "Победа!";
+                    break;
+                case GameModel.GameResult.Draw:
+                    resultText = "Ничья";
+                    break;
+                case GameModel.GameResult.Lose:
+                    resultText = "Поражение(";
+                    break;
+                default:
+                    resultText = "Неопределено";
+                    break;
+            }
+            gameUI.UpdateResultDisplay(resultText);
+        }
         
         isDiceRolling = false;
     }

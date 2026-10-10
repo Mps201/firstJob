@@ -8,3 +8,6 @@
 
 ## Домашнее задание №3 | Игральные кости
 Видео: https://vkvideo.ru/video-241607785_456239019?list=ln-E8KYQZDuMbTiTADIBi
+
+## Домашнее задание №4 | Игральные кости (c UI)
+Видео: https://vkvideo.ru/video-241607785_456239020?list=ln-7P39nZcSsy2TIOoCMI
