@@ -36,11 +36,6 @@ public class DiceGame : MonoBehaviour
         if (isDiceRolling) return;
         
         gameModel.GenerateTarget(diceCount);
-        
-        if (gameUI != null)
-        {
-            gameUI.UpdateTargetDisplay(gameModel.Target);
-        }
 
         CreateDice(diceCount);
         ThrowDice();
@@ -132,29 +127,6 @@ public class DiceGame : MonoBehaviour
         int score = scoreCalculator.GetLastScore();
         
         gameModel.DetermineResult(score);
-        
-        if (gameUI != null)
-        {
-            gameUI.UpdateScoreDisplay(score);
-            
-            string resultText = "";
-            switch (gameModel.CurrentResult)
-            {
-                case GameModel.GameResult.Win:
-                    resultText = "Победа!";
-                    break;
-                case GameModel.GameResult.Draw:
-                    resultText = "Ничья";
-                    break;
-                case GameModel.GameResult.Lose:
-                    resultText = "Поражение(";
-                    break;
-                default:
-                    resultText = "Неопределено";
-                    break;
-            }
-            gameUI.UpdateResultDisplay(resultText);
-        }
         
         isDiceRolling = false;
     }

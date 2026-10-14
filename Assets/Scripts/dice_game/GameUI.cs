@@ -23,8 +23,13 @@ public class GameUI : MonoBehaviour
         InitializeUI();
         
         if (rollButton != null)
-        {
             rollButton.onClick.AddListener(OnRollButtonClicked);
+        
+        // ПОДПИСКА НА СОБЫТИЯ МОДЕЛИ
+        if (gameModel != null)
+        {
+            gameModel.OnTargetGenerated += HandleTargetGenerated;
+            gameModel.OnResultDetermined += HandleResultDetermined;
         }
     }
     
@@ -33,58 +38,66 @@ public class GameUI : MonoBehaviour
         UpdateScoreDisplay(0);
         UpdateResultDisplay("Введи количество кубиков и нажми кнопку");
         UpdateTargetDisplay(0);
-        
         if (diceCountInput != null) diceCountInput.text = "2";
     }
-    
-    public void UpdateScoreDisplay(int score)
+
+    private void HandleTargetGenerated(int target)
     {
-        if (scoreText != null)
-        {
-            scoreText.text = $"Выпало: {score}";
-        }
+        UpdateTargetDisplay(target);
     }
     
-    public void UpdateResultDisplay(string result)
+    private void HandleResultDetermined(GameModel.GameResult result, int score)
     {
-        if (resultText != null)
+        UpdateScoreDisplay(score);
+        
+        string resultTextValue = result switch
         {
-            resultText.text = result;
-        }
+            GameModel.GameResult.Win => "🏆 Победа!",
+            GameModel.GameResult.Draw => "🤝 Ничья",
+            GameModel.GameResult.Lose => "😔 Поражение",
+            _ => "Неопределено"
+        };
+        
+        UpdateResultDisplay(resultTextValue);
+    }
+
+    public void UpdateResultDisplay(string text)
+    {
+        if (resultText != null) resultText.text = text;
     }
     
-    public void UpdateTargetDisplay(int target)
+    private void UpdateScoreDisplay(int score)
     {
-        if (targetText != null)
-        {
-            targetText.text = $"Цель: {target}";
-        }
+        if (scoreText != null) scoreText.text = $"Выпало: {score}";
+    }
+    
+    private void UpdateTargetDisplay(int target)
+    {
+        if (targetText != null) targetText.text = $"Цель: {target}";
     }
     
     void OnRollButtonClicked()
     {
         int diceCount = ParseInput(diceCountInput, 2);
-        
-        if (diceGame != null)
-        {
-            diceGame.StartNewRound(diceCount);
-        }
+        if (diceGame != null) diceGame.StartNewRound(diceCount);
     }
     
     int ParseInput(TMP_InputField inputField, int defaultValue)
     {
         if (inputField != null && int.TryParse(inputField.text, out int value))
-        {
             return Mathf.Clamp(value, 1, 10);
-        }
         return defaultValue;
     }
     
     void OnDestroy()
     {
         if (rollButton != null)
-        {
             rollButton.onClick.RemoveListener(OnRollButtonClicked);
+        
+        if (gameModel != null)
+        {
+            gameModel.OnTargetGenerated -= HandleTargetGenerated;
+            gameModel.OnResultDetermined -= HandleResultDetermined;
         }
     }
 }
