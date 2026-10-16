@@ -3,8 +3,9 @@ using UnityEngine;
 
 public class GameModel : MonoBehaviour
 {
-    // События, на которые подписывается UI
+    // События
     public event Action<int> OnTargetGenerated;
+    public event Action OnThrowStarted;
     public event Action<GameResult, int> OnResultDetermined;
     
     public int Target { get; private set; }
@@ -23,8 +24,13 @@ public class GameModel : MonoBehaviour
         int minScore = diceCount;
         int maxScore = diceCount * 6;
         Target = UnityEngine.Random.Range(minScore, maxScore + 1);
-
+        
         OnTargetGenerated?.Invoke(Target);
+    }
+
+    public void NotifyThrowStarted()
+    {
+        OnThrowStarted?.Invoke();
     }
     
     public void DetermineResult(int totalScore)

@@ -64,11 +64,7 @@ public class DiceGame : MonoBehaviour
         
         isDiceRolling = true;
         gameModel.ResetResult();
-        
-        if (gameUI != null)
-        {
-            gameUI.UpdateResultDisplay("Бросаем...");
-        }
+        gameModel.NotifyThrowStarted(); 
         
         foreach (var dice in diceList)
         {

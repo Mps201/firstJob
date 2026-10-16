@@ -25,10 +25,10 @@ public class GameUI : MonoBehaviour
         if (rollButton != null)
             rollButton.onClick.AddListener(OnRollButtonClicked);
         
-        // ПОДПИСКА НА СОБЫТИЯ МОДЕЛИ
         if (gameModel != null)
         {
             gameModel.OnTargetGenerated += HandleTargetGenerated;
+            gameModel.OnThrowStarted += HandleThrowStarted;
             gameModel.OnResultDetermined += HandleResultDetermined;
         }
     }
@@ -39,6 +39,11 @@ public class GameUI : MonoBehaviour
         UpdateResultDisplay("Введи количество кубиков и нажми кнопку");
         UpdateTargetDisplay(0);
         if (diceCountInput != null) diceCountInput.text = "2";
+    }
+
+    private void HandleThrowStarted()
+    {
+        UpdateResultDisplay("Бросаем...");
     }
 
     private void HandleTargetGenerated(int target)
@@ -52,9 +57,9 @@ public class GameUI : MonoBehaviour
         
         string resultTextValue = result switch
         {
-            GameModel.GameResult.Win => "🏆 Победа!",
-            GameModel.GameResult.Draw => "🤝 Ничья",
-            GameModel.GameResult.Lose => "😔 Поражение",
+            GameModel.GameResult.Win => "Победа!",
+            GameModel.GameResult.Draw => "Ничья",
+            GameModel.GameResult.Lose => "Поражение",
             _ => "Неопределено"
         };
         
@@ -97,6 +102,7 @@ public class GameUI : MonoBehaviour
         if (gameModel != null)
         {
             gameModel.OnTargetGenerated -= HandleTargetGenerated;
+            gameModel.OnThrowStarted -= HandleThrowStarted;
             gameModel.OnResultDetermined -= HandleResultDetermined;
         }
     }
